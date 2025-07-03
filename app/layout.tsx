@@ -39,9 +39,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <ThemeProvider>
-        {children}
-      </ThemeProvider>
+      <body className="bg-brand dark:bg-dark antialiased dark:text-gray-100">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

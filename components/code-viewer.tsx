@@ -67,11 +67,6 @@ export default function CodeViewer({
 
   return (
     <div className="relative w-full">
-      {hasInfiniteLoop && (
-        <div className="mb-2 rounded bg-yellow-100 px-4 py-2 text-sm text-yellow-800 border border-yellow-300 shadow">
-          <b>Warning:</b> The generated code may contain patterns that cause infinite loops or crashes (e.g., setState in render). If the preview fails, try using the <b>Try Fix</b> button below.
-        </div>
-      )}
       {showEditor ? (
         <Sandpack
           options={{
