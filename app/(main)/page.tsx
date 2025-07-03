@@ -62,11 +62,33 @@ export default function Home() {
   const suggestivePrompts = language === "en" ? [
     "Build me a calculator app",
     "Create a to-do list web app",
-    "Make a weather dashboard",
     "Create a very detailed CV builder web app",
-    "Create a Pomodoro timer",
-    "Build a notes app with search",
+  ] : [
+    "আমার জন্য একটি ক্যালকুলেটর অ্যাপ তৈরি করুন",
+    "একটি টু-ডু লিস্ট ওয়েব অ্যাপ তৈরি করুন",
+    "একটি বিস্তারিত সিভি বিল্ডার ওয়েব অ্যাপ তৈরি করুন",
   ];
+
+  // Auto-save project when code is generated
+  useEffect(() => {
+    if (generatedCode && prompt && status === "created") {
+      const projectName = prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt;
+      const newProject = {
+        name: projectName,
+        code: generatedCode,
+        prompt: prompt,
+        model: model,
+      };
+      
+      // Only save if the project is different from the last one
+      const lastProject = projects[0];
+      if (!lastProject || 
+          lastProject.code !== newProject.code || 
+          lastProject.prompt !== newProject.prompt) {
+        saveProject(newProject);
+      }
+    }
+  }, [generatedCode, prompt, status, model, saveProject, projects]);
 
   async function createApp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
