@@ -56,10 +56,9 @@ export default function Home() {
   const suggestivePrompts = [
     "Build me a calculator app",
     "Create a to-do list web app",
-    "Make a weather dashboard",
+    
     "Create a very detailed CV builder web app",
-    "Create a Pomodoro timer",
-    "Build a notes app with search",
+    
   ];
 
   async function createApp(e: FormEvent<HTMLFormElement>) {
