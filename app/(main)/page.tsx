@@ -33,7 +33,6 @@ export default function Home() {
       label: "gemini-2.0-flash-exp",
       value: "gemini-2.0-flash-exp",
     },
-    
     {
       label: "gemini-1.5-flash",
       value: "gemini-1.5-flash",
@@ -368,9 +367,9 @@ export default function Home() {
         {/* Header Section */}
         <div className="space-y-6">
           <a
-            className="inline-flex h-7 shrink-0 items-center gap-[9px] rounded-[50px] border-[0.5px] border-solid border-[#E6E6E6] bg-[rgba(234,238,255,0.65)] dark:bg-[rgba(30,41,59,0.5)] dark:border-gray-700 px-7 py-5 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)]"
+            className="inline-flex h-6 shrink-0 items-center gap-[6px] rounded-[50px] border-[0.5px] border-solid border-[#E6E6E6] bg-[rgba(234,238,255,0.65)] dark:bg-[rgba(30,41,59,0.5)] dark:border-gray-700 px-4 py-3 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)] mt-4"
           >
-            <span className="text-center">
+            <span className="text-sm">
               ✨ AI-Powered • No-Code • Open Source
             </span>
           </a>
@@ -386,34 +385,47 @@ export default function Home() {
           <form className="w-full" onSubmit={createApp}>
             <fieldset disabled={loading} className="disabled:opacity-75 space-y-6">
               {/* Main Input */}
-              <div className="relative">
-                <div className="absolute -inset-2 rounded-[32px] bg-gray-300/50 dark:bg-gray-800/50" />
-                <div className="relative flex rounded-3xl bg-white dark:bg-[#1E293B] shadow-sm">
-                  <div className="relative flex flex-grow items-stretch focus-within:z-10">
-                    <textarea
-                      rows={3}
-                      required
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      name="prompt"
-                      className="w-full resize-none rounded-l-3xl bg-transparent px-6 py-5 text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-gray-100 dark:placeholder-gray-400"
-                      placeholder={t.placeholder}
-                    />
-                  </div>
+              <div className="relative w-full">
+                {/* Prompt Box */}
+                <textarea
+                  className="w-full p-4 pr-16 rounded-xl border border-gray-200 shadow-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 resize-none
+                             dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-900/50"
+                  placeholder="Ask CodeCraft anything..."
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                />
+
+                {/* Prompt Enhancer (kept in bottom-left corner) */}
+                <div className="absolute bottom-3 left-3">
                   <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-xl hover:shadow-2xl hover:brightness-110 transition-all duration-300 flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={handleEnhancePrompt}
+                    className="p-1 rounded-full text-yellow-400 hover:text-yellow-300 transition-colors"
                   >
-                    Submit
-                    <ArrowRight className="w-5 h-5" />
+                    <Sparkles className="w-5 h-5" />
                   </button>
                 </div>
-                <button 
-                  className="absolute left-2 bottom-2 p-1 rounded-full text-yellow-400 hover:text-yellow-300 transition-colors"
-                  onClick={handleEnhancePrompt}
+
+                {/* Bolt.new-style Submit Button */}
+                <button
+                  type="submit"
+                  className={`absolute right-3 bottom-3 p-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all duration-200 ${prompt ? "scale-105 opacity-100" : "opacity-90"}`}
+                  aria-label="Submit"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M22 2L11 13" />
+                    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                  </svg>
                 </button>
               </div>
 

@@ -7,13 +7,13 @@ export default function Header() {
   return (
     <header className="relative mx-auto mt-4 flex w-full items-center justify-center px-2 pb-7 sm:px-4">
       <Link href="/" className="absolute flex flex-col items-center gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-16">
           <Image alt="header text" src={code} className="h-6 w-6" />
           <h1 className="text-3xl tracking-tight">
             <span className="text-blue-600">Code</span>Craft
           </h1>
         </div>
-        <p className="text-sm">
+        <p className="text-sm pt-2">
           <span className="text-blue-600">Build Apps</span>
           <span className="text-gray-900 dark:text-white"> with AI Magic</span>
         </p>
