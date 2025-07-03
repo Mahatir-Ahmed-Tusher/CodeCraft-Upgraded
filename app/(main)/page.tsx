@@ -12,12 +12,18 @@ import { FormEvent, useEffect, useState } from "react";
 import LoadingDots from "../../components/loading-dots";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { useApp } from "@/contexts/AppContext";
+import { useTranslation } from "@/utils/translations";
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 function removeCodeFormatting(code: string): string {
   return code.replace(/```(?:typescript|javascript|tsx)?\n([\s\S]*?)```/g, '$1').trim();
 }
 
 export default function Home() {
+  const { language, saveProject, projects } = useApp();
+  const t = useTranslation(language);
+  
   let [status, setStatus] = useState<
     "initial" | "creating" | "created" | "updating" | "updated"
   >("initial");
@@ -53,14 +59,36 @@ export default function Home() {
   let loading = status === "creating" || status === "updating";
 
   // Suggestive prompts
-  const suggestivePrompts = [
+  const suggestivePrompts = language === "en" ? [
     "Build me a calculator app",
     "Create a to-do list web app",
-    "Make a weather dashboard",
     "Create a very detailed CV builder web app",
-    "Create a Pomodoro timer",
-    "Build a notes app with search",
+  ] : [
+    "আমার জন্য একটি ক্যালকুলেটর অ্যাপ তৈরি করুন",
+    "একটি টু-ডু লিস্ট ওয়েব অ্যাপ তৈরি করুন",
+    "একটি বিস্তারিত সিভি বিল্ডার ওয়েব অ্যাপ তৈরি করুন",
   ];
+
+  // Auto-save project when code is generated
+  useEffect(() => {
+    if (generatedCode && prompt && status === "created") {
+      const projectName = prompt.length > 50 ? prompt.substring(0, 50) + "..." : prompt;
+      const newProject = {
+        name: projectName,
+        code: generatedCode,
+        prompt: prompt,
+        model: model,
+      };
+      
+      // Only save if the project is different from the last one
+      const lastProject = projects[0];
+      if (!lastProject || 
+          lastProject.code !== newProject.code || 
+          lastProject.prompt !== newProject.prompt) {
+        saveProject(newProject);
+      }
+    }
+  }, [generatedCode, prompt, status, model, saveProject, projects]);
 
   async function createApp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -335,228 +363,227 @@ export default function Home() {
   }, [loading, generatedCode]);
 
   return (
-    <main className="mt-12 flex w-full flex-1 flex-col items-center px-4 text-center sm:mt-1">
-      <a
-        className="mb-4 inline-flex h-7 shrink-0 items-center gap-[9px] rounded-[50px] border-[0.5px] border-solid border-[#E6E6E6] bg-[rgba(234,238,255,0.65)] dark:bg-[rgba(30,41,59,0.5)] dark:border-gray-700 px-7 py-5 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)]"
-        href="https://ai.google.dev/gemini-api/docs"
-        target="_blank"
-      >
-        <span className="text-center">
-          Powered by <span className="font-medium">Gemini API</span>
-        </span>
-      </a>
-      <h1 className="my-6 max-w-3xl text-4xl font-bold text-gray-800 dark:text-white sm:text-6xl">
-        Welcome to <span className="text-blue-600">CodeCraft</span>
-        <br />Turn your <span className="text-blue-600">idea</span> into an <span className="text-blue-600">app</span>
-      </h1>
+    <main className="flex w-full flex-1 flex-col items-center px-4 text-center overflow-y-auto">
+      <div className="w-full max-w-7xl mx-auto py-8 space-y-8">
+        {/* Header Section */}
+        <div className="space-y-6">
+          <a
+            className="inline-flex h-7 shrink-0 items-center gap-[9px] rounded-[50px] border-[0.5px] border-solid border-[#E6E6E6] bg-[rgba(234,238,255,0.65)] dark:bg-[rgba(30,41,59,0.5)] dark:border-gray-700 px-7 py-5 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)]"
+          >
+            <span className="text-center">
+              ✨ AI-Powered • No-Code • Open Source
+            </span>
+          </a>
+          
+          <h1 className="text-4xl font-bold text-center mb-6">
+            <span className="text-blue-500">Where Ideas</span>{' '}
+            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Become Reality</span>
+          </h1>
+        </div>
 
-      <form className="w-full max-w-xl" onSubmit={createApp}>
-        <fieldset disabled={loading} className="disabled:opacity-75">
-          <div className="relative mt-5">
-            <div className="absolute -inset-2 rounded-[32px] bg-gray-300/50 dark:bg-gray-800/50" />
-            <div className="relative flex rounded-3xl bg-white dark:bg-[#1E293B] shadow-sm">
-              <div className="relative flex flex-grow items-stretch focus-within:z-10">
-                <textarea
-                  rows={3}
-                  required
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  name="prompt"
-                  className="w-full resize-none rounded-l-3xl bg-transparent px-6 py-5 text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-gray-100 dark:placeholder-gray-400"
-                  placeholder="Build me a calculator app..."
-                />
+        {/* Form Section */}
+        <div className="w-full max-w-4xl mx-auto space-y-6">
+          <form className="w-full" onSubmit={createApp}>
+            <fieldset disabled={loading} className="disabled:opacity-75 space-y-6">
+              {/* Main Input */}
+              <div className="relative">
+                <div className="absolute -inset-2 rounded-[32px] bg-gray-300/50 dark:bg-gray-800/50" />
+                <div className="relative flex rounded-3xl bg-white dark:bg-[#1E293B] shadow-sm">
+                  <div className="relative flex flex-grow items-stretch focus-within:z-10">
+                    <textarea
+                      rows={3}
+                      required
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      name="prompt"
+                      className="w-full resize-none rounded-l-3xl bg-transparent px-6 py-5 text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-gray-100 dark:placeholder-gray-400"
+                      placeholder={t.placeholder}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl shadow-xl hover:shadow-2xl hover:brightness-110 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    Submit
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+                <button 
+                  className="absolute left-2 bottom-2 p-1 rounded-full text-yellow-400 hover:text-yellow-300 transition-colors"
+                  onClick={handleEnhancePrompt}
+                >
+                  <Sparkles className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-3xl px-3 py-2 text-sm font-semibold text-blue-500 hover:text-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:text-gray-900 dark:disabled:text-gray-400"
-              >
-                {status === "creating" ? (
-                  <LoadingDots color="black" style="large" />
-                ) : (
-                  <ArrowLongRightIcon className="-ml-0.5 size-6" />
-                )}
-              </button>
-            </div>
-          </div>
-          {/* Enhance Prompt button */}
-          <div className="mt-3 flex justify-center">
-            <button
-              type="button"
-              onClick={handleEnhancePrompt}
-              disabled={enhancing || !prompt.trim()}
-              className="flex items-center gap-2 rounded-full bg-gradient-to-br from-indigo-500 via-blue-500 to-blue-600 px-6 py-2 text-base font-semibold text-white shadow-lg shadow-blue-400/30 transition hover:scale-105 hover:shadow-indigo-500/40 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed dark:shadow-indigo-900/30"
-            >
-              {enhancing ? (
-                <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a9.001 9.001 0 0 1 2.625 10.33M7.138 19.513a9.001 9.001 0 0 1-2.625-10.33m2.625 10.33A8.963 8.963 0 0 0 12 21c1.657 0 3.216-.402 4.587-1.116m-10.074 0A8.963 8.963 0 0 1 3 12c0-1.657.402-3.216 1.116-4.587m0 0A8.963 8.963 0 0 1 12 3c1.657 0 3.216.402 4.587 1.116m0 0A8.963 8.963 0 0 0 21 12c0 1.657-.402 3.216-1.116 4.587" />
-                </svg>
-              )}
-              Enhance Prompt
-            </button>
-          </div>
-          {/* Suggestive prompts */}
-          {prompt.trim() === "" && (
-            <div className="mt-3 flex flex-wrap gap-3 justify-center">
-              {suggestivePrompts.map((s, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setPrompt(s)}
-                  className="rounded-full bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 px-5 py-2 text-sm font-medium text-blue-700 shadow-md shadow-blue-200/50 transition hover:scale-105 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-900 dark:text-blue-100 dark:shadow-indigo-900/30"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="mt-6 flex flex-col justify-center gap-4 sm:flex-row sm:items-center sm:gap-8">
-            <div className="flex items-center justify-between gap-3 sm:justify-center">
-              <p className="text-gray-500 dark:text-gray-400 sm:text-xs">Model:</p>
-              <Select.Root
-                name="model"
-                disabled={loading}
-                value={model}
-                onValueChange={(value) => setModel(value)}
-              >
-                <Select.Trigger className="group flex w-60 max-w-xs items-center rounded-2xl border-[6px] border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1E293B] px-4 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500">
-                  <Select.Value />
-                  <Select.Icon className="ml-auto">
-                    <ChevronDownIcon className="size-6 text-gray-300 group-focus-visible:text-gray-500 group-enabled:group-hover:text-gray-500 dark:text-gray-600 dark:group-focus-visible:text-gray-400 dark:group-enabled:group-hover:text-gray-400" />
-                  </Select.Icon>
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Content className="overflow-hidden rounded-md bg-white dark:bg-[#1E293B] shadow-lg">
-                    <Select.Viewport className="p-2">
-                      {models.map((model) => (
-                        <Select.Item
-                          key={model.value}
-                          value={model.value}
-                          className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-gray-800 data-[highlighted]:outline-none"
-                        >
-                          <Select.ItemText asChild>
-                            <span className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                              <div className="size-2 rounded-full bg-green-500" />
-                              {model.label}
-                            </span>
-                          </Select.ItemText>
-                          <Select.ItemIndicator className="ml-auto">
-                            <CheckIcon className="size-5 text-blue-600" />
-                          </Select.ItemIndicator>
-                        </Select.Item>
-                      ))}
-                    </Select.Viewport>
-                    <Select.ScrollDownButton />
-                    <Select.Arrow />
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </div>
-          </div>
-        </fieldset>
-      </form>
 
-      <hr className="border-1 mb-20 h-px bg-gray-700 dark:bg-gray-700/30" />
-
-      {status !== "initial" && (
-        <motion.div
-          initial={{ height: 0 }}
-          animate={{
-            height: "auto",
-            overflow: "hidden",
-            transitionEnd: { overflow: "visible" },
-          }}
-          transition={{ type: "spring", bounce: 0, duration: 0.5 }}
-          className="w-full pb-[25vh] pt-1"
-          onAnimationComplete={() => scrollTo()}
-          ref={ref}
-        >
-          <div className="relative mt-8 w-full overflow-hidden">
-            <div className="isolate">
-              <CodeViewer code={generatedCode} showEditor onTryFix={fixingError ? undefined : handleTryFix} />
-            </div>
-            {/* Download button */}
-            {generatedCode && (
-              <div className="flex flex-col items-center w-full mt-6 mb-4 gap-3">
-                <button
-                  onClick={handleDownload}
-                  className="group flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-pink-500 via-pink-400 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-pink-300/30 hover:scale-105 hover:shadow-pink-400/40 focus:outline-none focus:ring-2 focus:ring-pink-300/40 focus:ring-offset-2 transition-all duration-150"
-                  style={{ boxShadow: '0 2px 12px 0 #f472b6' }}
-                >
-                  <ArrowDownTrayIcon className="h-4 w-4 text-white group-hover:animate-bounce" />
-                  Download Code as ZIP
-                </button>
-                <button
-                  onClick={handleDeploy}
-                  disabled={deploying}
-                  className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-green-500 via-green-400 to-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-green-300/30 hover:scale-105 hover:shadow-green-400/40 focus:outline-none focus:ring-2 focus:ring-green-300/40 focus:ring-offset-2 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {deploying ? (
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                  )}
-                  Deploy to Vercel
-                </button>
-                {deployUrl && (
-                  <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="mt-2 text-green-600 underline font-semibold">View Deployment</a>
-                )}
+              {/* Suggestive Prompts */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {suggestivePrompts.map((prompt, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setPrompt(prompt)}
+                    className="px-4 py-2 text-sm rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {prompt}
+                  </button>
+                ))}
               </div>
-            )}
-            {/* Follow-up prompt */}
-            {generatedCode && (
-              <form onSubmit={handleFollowup} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2 mb-8 w-full max-w-2xl mx-auto">
-                <input
-                  type="text"
-                  value={followupPrompt}
-                  onChange={e => setFollowupPrompt(e.target.value)}
-                  disabled={followupLoading}
-                  placeholder="Describe a change or improvement..."
-                  className="flex-1 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                />
-                <button
-                  type="submit"
-                  disabled={followupLoading || !followupPrompt.trim()}
-                  className="rounded-full bg-gradient-to-br from-blue-500 via-blue-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-300/30 transition hover:scale-105 hover:shadow-indigo-400/40 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {followupLoading ? (
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : (
-                    "Send"
-                  )}
-                </button>
-              </form>
-            )}
 
-            <AnimatePresence>
-              {loading && (
-                <motion.div
-                  initial={status === "updating" ? { x: "100%" } : undefined}
-                  animate={status === "updating" ? { x: "0%" } : undefined}
-                  exit={{ x: "100%" }}
-                  transition={{
-                    type: "spring",
-                    bounce: 0,
-                    duration: 0.85,
-                    delay: 0.5,
-                  }}
-                  className="absolute inset-x-0 bottom-0 top-1/2 flex items-center justify-center rounded-r border border-gray-400 dark:border-gray-700 bg-gradient-to-br from-gray-100 to-gray-300 dark:from-[#1E293B] dark:to-gray-800 md:inset-y-0 md:left-1/2 md:right-0"
-                >
-                  <p className="animate-pulse text-3xl font-bold dark:text-gray-100">
-                    {status === "creating"
-                      ? "Building your app..."
-                      : "Updating your app..."}
-                  </p>
-                </motion.div>
+              {/* Model Selection */}
+              <div className="flex flex-col justify-center gap-4 sm:flex-row sm:items-center sm:gap-8">
+                <div className="flex items-center justify-between gap-3 sm:justify-center">
+                  <p className="text-gray-500 dark:text-gray-400 sm:text-xs">{t.model}</p>
+                  <Select.Root
+                    name="model"
+                    disabled={loading}
+                    value={model}
+                    onValueChange={(value) => setModel(value)}
+                  >
+                    <Select.Trigger className="group flex w-60 max-w-xs items-center rounded-2xl border-[6px] border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1E293B] px-4 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 z-50">
+                      <Select.Value />
+                      <Select.Icon className="ml-auto">
+                        <ChevronDownIcon className="size-6 text-gray-300 group-focus-visible:text-gray-500 group-enabled:group-hover:text-gray-500 dark:text-gray-600 dark:group-focus-visible:text-gray-400 dark:group-enabled:group-hover:text-gray-400" />
+                      </Select.Icon>
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content className="overflow-hidden rounded-md bg-white dark:bg-[#1E293B] shadow-lg z-[100]">
+                        <Select.Viewport className="p-2">
+                          {models.map((model) => (
+                            <Select.Item
+                              key={model.value}
+                              value={model.value}
+                              className="flex cursor-pointer items-center rounded-md px-3 py-2 text-sm data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-gray-800 data-[highlighted]:outline-none"
+                            >
+                              <Select.ItemText asChild>
+                                <span className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                  <div className="size-2 rounded-full bg-green-500" />
+                                  {model.label}
+                                </span>
+                              </Select.ItemText>
+                              <Select.ItemIndicator className="ml-auto">
+                                <CheckIcon className="size-5 text-blue-600" />
+                              </Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.Viewport>
+                        <Select.ScrollDownButton />
+                        <Select.Arrow />
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
+        {/* Divider */}
+        <hr className="border-1 h-px bg-gray-700 dark:bg-gray-700/30 w-full max-w-4xl mx-auto" />
+
+        {/* Code Generation Results */}
+        {status !== "initial" && (
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{
+              height: "auto",
+              overflow: "hidden",
+              transitionEnd: { overflow: "visible" },
+            }}
+            transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+            className="w-full"
+            onAnimationComplete={() => scrollTo()}
+            ref={ref}
+          >
+            <div className="relative w-full overflow-hidden">
+              <div className="isolate">
+                <CodeViewer code={generatedCode} showEditor onTryFix={fixingError ? undefined : handleTryFix} />
+              </div>
+              
+              {/* Action Buttons */}
+              {generatedCode && (
+                <div className="flex flex-col items-center w-full mt-6 mb-4 gap-3">
+                  <button
+                    onClick={handleDownload}
+                    className="group flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-pink-500 via-pink-400 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-pink-300/30 hover:scale-105 hover:shadow-pink-400/40 focus:outline-none focus:ring-2 focus:ring-pink-300/40 focus:ring-offset-2 transition-all duration-150"
+                    style={{ boxShadow: '0 2px 12px 0 #f472b6' }}
+                  >
+                    <ArrowDownTrayIcon className="h-4 w-4 text-white group-hover:animate-bounce" />
+                    {t.download}
+                  </button>
+                  <button
+                    onClick={handleDeploy}
+                    disabled={deploying}
+                    className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-br from-green-500 via-green-400 to-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-green-300/30 hover:scale-105 hover:shadow-green-400/40 focus:outline-none focus:ring-2 focus:ring-green-300/40 focus:ring-offset-2 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {deploying ? (
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                    )}
+                    {t.deploy}
+                  </button>
+                  {deployUrl && (
+                    <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="mt-2 text-green-600 underline font-semibold">{t.viewDeployment}</a>
+                  )}
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      )}
+              
+              {/* Follow-up Prompt */}
+              {generatedCode && (
+                <form onSubmit={handleFollowup} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2 mb-8 w-full max-w-2xl mx-auto">
+                  <input
+                    type="text"
+                    value={followupPrompt}
+                    onChange={e => setFollowupPrompt(e.target.value)}
+                    disabled={followupLoading}
+                    placeholder={language === "en" ? "Describe a change or improvement..." : "একটি পরিবর্তন বা উন্নতি বর্ণনা করুন..."}
+                    className="flex-1 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-300 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={followupLoading || !followupPrompt.trim()}
+                    className="rounded-full bg-gradient-to-br from-blue-500 via-blue-400 to-indigo-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-blue-300/30 transition hover:scale-105 hover:shadow-indigo-400/40 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {followupLoading ? (
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      t.send
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* Loading Animation */}
+              <AnimatePresence>
+                {loading && (
+                  <motion.div
+                    initial={status === "updating" ? { x: "100%" } : undefined}
+                    animate={status === "updating" ? { x: "0%" } : undefined}
+                    exit={{ x: "100%" }}
+                    transition={{
+                      type: "spring",
+                      bounce: 0,
+                      duration: 0.85,
+                      delay: 0.5,
+                    }}
+                    className="absolute inset-x-0 bottom-0 top-1/2 flex items-center justify-center rounded-r border border-gray-400 dark:border-gray-700 bg-gradient-to-br from-gray-100 to-gray-300 dark:from-[#1E293B] dark:to-gray-800 md:inset-y-0 md:left-1/2 md:right-0"
+                  >
+                    <p className="animate-pulse text-3xl font-bold dark:text-gray-100">
+                      {status === "creating"
+                        ? t.building
+                        : t.updating}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </main>
   );
 }
