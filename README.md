@@ -1,8 +1,9 @@
-# CodeCraft - AI-Powered Code Generator
+# CodeCraft - Build Websites using AI
 
-![CodeCraft Banner](public/halo.png)
+![image](https://github.com/user-attachments/assets/f19e68dc-3717-4343-8c56-a056bfa2f819)
 
-A Next.js application that generates code from natural language prompts using AI.
+
+A Next.js application that generates code from natural language prompts using AI. Check out the demo link: https://codecraft-io.vercel.app/
 
 ## ✨ Features
 
@@ -13,6 +14,9 @@ A Next.js application that generates code from natural language prompts using AI
 - **Responsive Design**: Works on all device sizes
 - **One-Click Deployment**: Direct deployment to Vercel/Netlify
 - **API Integration**: Built-in API endpoints for code generation
+
+  ![image](https://github.com/user-attachments/assets/11e9dd4d-c6bb-489e-9190-f4d7ae91b90e)
+
 
 ## 🛠 Tech Stack
 
@@ -48,7 +52,7 @@ ANTHROPIC_API_KEY=your_key_here
 
 ### Installation
 ```bash
-git clone https://github.com/your-username/CodeCraft-Upgraded.git
+git clone https://github.com/Mahatir-Ahmed-Tusher/CodeCraft-Upgraded.git
 cd CodeCraft-Upgraded
 npm install
 ```
