@@ -11,7 +11,6 @@ import {
   ClockIcon,
   BoltIcon
 } from "@heroicons/react/24/outline";
-import { ExternalLink } from "lucide-react";
 
 export default function HelpPage() {
   const { language } = useApp();
@@ -19,8 +18,7 @@ export default function HelpPage() {
 
   const modelInfo = [
     {
-      name: "Gemini 2.0 Flash Exp",
-      provider: "Google",
+      name: "gemini-2.0-flash-exp",
       icon: <SparklesIcon className="h-6 w-6" />,
       description: language === "en" 
         ? "Latest experimental model with enhanced capabilities for complex code generation and deeper context understanding."
@@ -30,8 +28,7 @@ export default function HelpPage() {
         : "জটিল অ্যাপ্লিকেশন, উন্নত বৈশিষ্ট্য, বিস্তারিত প্রয়োজনীয়তা"
     },
     {
-      name: "Gemini 1.5 Flash",
-      provider: "Google",
+      name: "gemini-1.5-flash",
       icon: <BoltIcon className="h-6 w-6" />,
       description: language === "en"
         ? "Fast and efficient model optimized for quick code generation and simple to moderate complexity tasks."
@@ -39,39 +36,6 @@ export default function HelpPage() {
       bestFor: language === "en"
         ? "Quick prototypes, simple apps, fast iterations"
         : "দ্রুত প্রোটোটাইপ, সাধারণ অ্যাপ, দ্রুত পুনরাবৃত্তি"
-    },
-    {
-      name: "Llama 3.3 70B",
-      provider: "Groq",
-      icon: <CpuChipIcon className="h-6 w-6" />,
-      description: language === "en"
-        ? "High-performance open-source model with excellent reasoning capabilities and code generation quality."
-        : "চমৎকার যুক্তি ক্ষমতা এবং কোড জেনারেশন গুণমান সহ উচ্চ-কর্মক্ষমতা ওপেন-সোর্স মডেল।",
-      bestFor: language === "en"
-        ? "Complex logic, algorithms, data structures"
-        : "জটিল লজিক, অ্যালগরিদম, ডেটা স্ট্রাকচার"
-    },
-    {
-      name: "DeepSeek R1",
-      provider: "OpenRouter",
-      icon: <SparklesIcon className="h-6 w-6" />,
-      description: language === "en"
-        ? "Advanced reasoning model with strong problem-solving capabilities and code optimization skills."
-        : "শক্তিশালী সমস্যা সমাধানের ক্ষমতা এবং কোড অপ্টিমাইজেশন দক্ষতা সহ উন্নত যুক্তি মডেল।",
-      bestFor: language === "en"
-        ? "Problem solving, optimization, debugging"
-        : "সমস্যা সমাধান, অপ্টিমাইজেশন, ডিবাগিং"
-    },
-    {
-      name: "Mistral Small",
-      provider: "Mistral",
-      icon: <BoltIcon className="h-6 w-6" />,
-      description: language === "en"
-        ? "Efficient and reliable model for general-purpose code generation with good performance."
-        : "ভাল কর্মক্ষমতা সহ সাধারণ-উদ্দেশ্য কোড জেনারেশনের জন্য দক্ষ এবং নির্ভরযোগ্য মডেল।",
-      bestFor: language === "en"
-        ? "General applications, balanced performance"
-        : "সাধারণ অ্যাপ্লিকেশন, সুষম কর্মক্ষমতা"
     }
   ];
 
@@ -85,11 +49,6 @@ export default function HelpPage() {
       title: "Use the Enhance Prompt Feature",
       description: "Let AI improve your prompt for better results by clicking the 'Enhance Prompt' button.",
       icon: <SparklesIcon className="h-6 w-6" />
-    },
-    {
-      title: "Open in New Tab for Better Testing",
-      description: "Use the external link button to open your preview in a new tab for full-screen testing and debugging.",
-      icon: <ExternalLink className="h-6 w-6" />
     },
     {
       title: "Iterate and Refine",
@@ -111,11 +70,6 @@ export default function HelpPage() {
       title: "প্রম্পট উন্নত করার বৈশিষ্ট্য ব্যবহার করুন",
       description: "'প্রম্পট উন্নত করুন' বোতামে ক্লিক করে আরও ভাল ফলাফলের জন্য AI কে আপনার প্রম্পট উন্নত করতে দিন।",
       icon: <SparklesIcon className="h-6 w-6" />
-    },
-    {
-      title: "ভাল পরীক্ষার জন্য নতুন ট্যাবে খুলুন",
-      description: "পূর্ণ-স্ক্রিন পরীক্ষা এবং ডিবাগিংয়ের জন্য আপনার প্রিভিউ নতুন ট্যাবে খুলতে এক্সটার্নাল লিঙ্ক বোতাম ব্যবহার করুন।",
-      icon: <ExternalLink className="h-6 w-6" />
     },
     {
       title: "পুনরাবৃত্তি এবং পরিমার্জনা করুন",
@@ -173,8 +127,8 @@ export default function HelpPage() {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   {language === "en" 
-                    ? "Select the appropriate AI model based on your project complexity and requirements."
-                    : "আপনার প্রজেক্টের জটিলতা এবং প্রয়োজনীয়তার উপর ভিত্তি করে উপযুক্ত AI মডেল নির্বাচন করুন।"
+                    ? "Select the appropriate Gemini model based on your project complexity."
+                    : "আপনার প্রজেক্টের জটিলতার উপর ভিত্তি করে উপযুক্ত Gemini মডেল নির্বাচন করুন।"
                   }
                 </p>
               </div>
@@ -193,12 +147,12 @@ export default function HelpPage() {
               
               <div className="space-y-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {language === "en" ? "4. Test & Deploy" : "৪. পরীক্ষা এবং ডিপ্লয় করুন"}
+                  {language === "en" ? "4. Download or Deploy" : "৪. ডাউনলোড বা ডিপ্লয় করুন"}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
                   {language === "en" 
-                    ? "Open in new tab for full testing, then download or deploy directly to Vercel."
-                    : "পূর্ণ পরীক্ষার জন্য নতুন ট্যাবে খুলুন, তারপর ডাউনলোড করুন বা সরাসরি Vercel এ ডিপ্লয় করুন।"
+                    ? "Download your code as a ZIP file or deploy directly to Vercel."
+                    : "আপনার কোড ZIP ফাইল হিসেবে ডাউনলোড করুন বা সরাসরি Vercel এ ডিপ্লয় করুন।"
                   }
                 </p>
               </div>
@@ -223,14 +177,9 @@ export default function HelpPage() {
                     {model.icon}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {model.name}
-                      </h3>
-                      <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
-                        {model.provider}
-                      </span>
-                    </div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {model.name}
+                    </h3>
                     <p className="text-gray-600 dark:text-gray-400 mb-3">
                       {model.description}
                     </p>

@@ -40,7 +40,6 @@ export const translations = {
     // Actions
     download: "Download Code as ZIP",
     deploy: "Deploy to Vercel",
-    convertToApk: "Convert to APK",
     viewDeployment: "View Deployment",
     send: "Send",
     tryFix: "Try Fix",
@@ -104,7 +103,6 @@ export const translations = {
     // Actions
     download: "ZIP হিসেবে কোড ডাউনলোড করুন",
     deploy: "Vercel এ ডিপ্লয় করুন",
-    convertToApk: "APK এ রূপান্তর করুন",
     viewDeployment: "ডিপ্লয়মেন্ট দেখুন",
     send: "পাঠান",
     tryFix: "ঠিক করার চেষ্টা করুন",
