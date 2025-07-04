@@ -1,45 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Together from 'together-ai';
-import { z } from 'zod';
+import { OpenAI } from "openai";
 
-const RequestSchema = z.object({
-  imageData: z.string().min(1, 'Image data is required'),
-  prompt: z.string().optional(),
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const json = await req.json();
-    const result = RequestSchema.safeParse(json);
+    const { imageData, prompt } = await request.json();
     
-    if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.message },
-        { status: 422 }
-      );
-    }
-
-    const { imageData, prompt } = result.data;
-
-    // Check if Together AI API key is available
-    const apiKey = process.env.TOGETHER_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Together AI API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    const together = new Together({
-      apiKey: apiKey
-    });
-
-    // Create the message content for vision analysis
-    const visionPrompt = prompt 
-      ? `Analyze this image and describe what you see in detail, focusing on UI/UX elements, layout, design patterns, and functionality. The user wants to: ${prompt}`
-      : "Analyze this image and describe what you see in detail, focusing on UI/UX elements, layout, design patterns, colors, typography, and any interactive elements that could be recreated in code.";
-
-    const response = await together.chat.completions.create({
+    const visionPrompt = `Analyze this image and ${prompt}. Be detailed and specific.`;
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-vision-preview",
       messages: [
         {
           role: "user",
@@ -57,28 +29,27 @@ export async function POST(req: NextRequest) {
           ]
         }
       ],
-      model: "meta-llama/Llama-Vision-Free",
-      max_tokens: 1000,
-      temperature: 0.7,
+      max_tokens: 1000
     });
 
-    const analysis = response.choices[0]?.message?.content;
-    
-    if (!analysis) {
-      throw new Error('No analysis received from vision model');
-    }
-
-    return NextResponse.json({ 
-      analysis,
-      success: true 
+    return new Response(JSON.stringify({ 
+      analysis: response.choices[0]?.message?.content 
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
-
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error analyzing image:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to analyze image' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ 
+      error: "Failed to analyze image" 
+    }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
   }
 }
 
