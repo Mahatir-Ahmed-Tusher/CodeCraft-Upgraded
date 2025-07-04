@@ -28,11 +28,11 @@ export default function Layout({
 
         <div className="flex min-h-screen">
           <Sidebar />
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-w-0">
             <div className="isolate relative flex-1 flex flex-col">
               <SidebarToggle />
               <div className="flex-1 flex flex-col">
-                <div className="fixed right-4 top-4 z-50">
+                <div className="fixed right-2 sm:right-4 top-2 sm:top-4 z-50">
                   <ThemeToggle />
                 </div>
                 <Header />

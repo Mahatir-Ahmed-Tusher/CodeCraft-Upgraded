@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Define supported models
-const SUPPORTED_MODELS = ['gemini-2.0-flash-exp', 'gemini-1.5-flash'];
+// Define supported models with their providers
+const SUPPORTED_MODELS = [
+  'gemini-2.0-flash-exp',
+  'gemini-1.5-flash',
+  'llama-3.3-70b-versatile',
+  'deepseek/deepseek-r1-0528:free',
+  'mistral-small-latest'
+];
 
 // Input validation schema
 const RequestSchema = z.object({
@@ -34,17 +40,248 @@ function getSystemPrompt() {
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.`;
 }
 
+async function callGeminiAPI(model: string, prompt: string) {
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Google AI API key not configured');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const geminiModel = genAI.getGenerativeModel({ model });
+  const geminiStream = await geminiModel.generateContentStream(prompt);
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        for await (const chunk of geminiStream.stream) {
+          const chunkText = chunk.text();
+          controller.enqueue(new TextEncoder().encode(chunkText));
+        }
+        controller.close();
+      } catch (streamError: any) {
+        console.error('Gemini stream error:', streamError);
+        controller.error(new Error(`Gemini streaming error: ${streamError.message}`));
+      }
+    },
+  });
+}
+
+async function callGroqAPI(model: string, prompt: string) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('Groq API key not configured');
+  }
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+  }
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body from Groq API');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(new TextEncoder().encode(content));
+                }
+              } catch (parseError) {
+                // Skip invalid JSON chunks
+                continue;
+              }
+            }
+          }
+        }
+        controller.close();
+      } catch (streamError: any) {
+        console.error('Groq stream error:', streamError);
+        controller.error(new Error(`Groq streaming error: ${streamError.message}`));
+      }
+    },
+  });
+}
+
+async function callOpenRouterAPI(model: string, prompt: string) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenRouter API key not configured');
+  }
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      'X-Title': 'CodeCraft',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+  }
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body from OpenRouter API');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(new TextEncoder().encode(content));
+                }
+              } catch (parseError) {
+                // Skip invalid JSON chunks
+                continue;
+              }
+            }
+          }
+        }
+        controller.close();
+      } catch (streamError: any) {
+        console.error('OpenRouter stream error:', streamError);
+        controller.error(new Error(`OpenRouter streaming error: ${streamError.message}`));
+      }
+    },
+  });
+}
+
+async function callMistralAPI(model: string, prompt: string) {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) {
+    throw new Error('Mistral API key not configured');
+  }
+
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [{ role: 'user', content: prompt }],
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Mistral API error: ${response.status} - ${errorText}`);
+  }
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body from Mistral API');
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  controller.enqueue(new TextEncoder().encode(content));
+                }
+              } catch (parseError) {
+                // Skip invalid JSON chunks
+                continue;
+              }
+            }
+          }
+        }
+        controller.close();
+      } catch (streamError: any) {
+        console.error('Mistral stream error:', streamError);
+        controller.error(new Error(`Mistral streaming error: ${streamError.message}`));
+      }
+    },
+  });
+}
+
+function getModelProvider(model: string): string {
+  if (model.startsWith('gemini-')) return 'gemini';
+  if (model.includes('llama')) return 'groq';
+  if (model.includes('deepseek')) return 'openrouter';
+  if (model.includes('mistral')) return 'mistral';
+  return 'gemini'; // fallback
+}
+
 export async function POST(req: Request) {
   try {
-    // Validate API key
-    const apiKey = process.env.GOOGLE_AI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Server configuration error: Missing GOOGLE_AI_API_KEY' },
-        { status: 500 }
-      );
-    }
-
     // Parse and validate request body
     const json = await req.json();
     const result = RequestSchema.safeParse(json);
@@ -57,16 +294,12 @@ export async function POST(req: Request) {
 
     const { model, messages } = result.data;
 
-    // Initialize Gemini client
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const geminiModel = genAI.getGenerativeModel({ model });
-
     // Combine system prompt with user input
     const systemPrompt = getSystemPrompt();
-    const userPrompt = messages[0].content;
+    const userPrompt = messages[0]?.content || '';
     const fullPrompt = `${userPrompt}\n${systemPrompt}\nPlease ONLY return code, NO backticks or language names. Don't start with \`\`\`typescript or \`\`\`javascript or \`\`\`tsx or \`\`\`.`;
 
-    // Check prompt length (Gemini has token limits, approximate check)
+    // Check prompt length
     if (fullPrompt.length > 10000) {
       return NextResponse.json(
         { error: 'Prompt is too long. Please shorten your request.' },
@@ -74,29 +307,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Call Gemini API
-    const geminiStream = await geminiModel.generateContentStream(fullPrompt);
+    // Determine provider and call appropriate API
+    const provider = getModelProvider(model);
+    let stream: ReadableStream;
 
-    // Create readable stream for response
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of geminiStream.stream) {
-            const chunkText = chunk.text();
-            controller.enqueue(new TextEncoder().encode(chunkText));
-          }
-          controller.close();
-        } catch (streamError: any) {
-          console.error('Stream error:', streamError);
-          controller.error(new Error(`Streaming error: ${streamError.message}`));
-        }
-      },
-      cancel() {
-        // Handle stream cancellation if needed
-      },
-    });
+    switch (provider) {
+      case 'gemini':
+        stream = await callGeminiAPI(model, fullPrompt);
+        break;
+      case 'groq':
+        stream = await callGroqAPI(model, fullPrompt);
+        break;
+      case 'openrouter':
+        stream = await callOpenRouterAPI(model, fullPrompt);
+        break;
+      case 'mistral':
+        stream = await callMistralAPI(model, fullPrompt);
+        break;
+      default:
+        throw new Error(`Unsupported model provider: ${provider}`);
+    }
 
-    return new Response(readableStream, {
+    return new Response(stream, {
       headers: { 'Content-Type': 'text/plain' },
     });
   } catch (error: any) {
